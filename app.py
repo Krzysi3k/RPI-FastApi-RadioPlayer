@@ -1,24 +1,45 @@
 from fastapi import FastAPI, Response, status
 from config import stations, media_log, q, r
+from dataclasses import dataclass
 import tasks
 import subprocess
 import re
 
 
-app = FastAPI()
 
-@app.get('/stop')
-def stop_radio():
-    q.enqueue(tasks.stop_radio)
-    return {'radio':'stopped'}
+@dataclass
+class StationDetails:
+    display_name: str
+    cmd: str
+
+
+@dataclass
+class Station:
+    station_name: str
+    details: StationDetails
+
+
+class RadioStation:
+    def __init__(self, station_name):
+        try:
+            self.station = Station(station_name, StationDetails(
+                stations[station_name]["name"],
+                stations[station_name]["cmd"]
+            ))
+        except KeyError:
+            self.station = None
+
+
+app = FastAPI()
 
 
 @app.get('/play/{station}')
 def play_station(station: str, response: Response):
-    if station in stations:
-        cmd = stations[station]["cmd"]
+    radio = RadioStation(station)
+    if radio.station is not None:
+        cmd = radio.station.details.cmd
         app_name = cmd.split(' ')[0]
-        station_name = stations[station]["name"]
+        station_name = radio.station.details.display_name
         q.enqueue(tasks.play_station, cmd, app_name, media_log)
         r.set('station', station_name)
         return {'playing': station_name}
@@ -33,6 +54,12 @@ def change_volume(volume: str, response: Response):
         return {'volume option': volume}
     response.status_code = status.HTTP_400_BAD_REQUEST
     return { 'valid query parameters': ['up','down','mute','unmute']}
+
+
+@app.get('/stop')
+def stop_radio():
+    q.enqueue(tasks.stop_radio)
+    return {'radio':'stopped'}
 
 
 @app.get('/get-title')
