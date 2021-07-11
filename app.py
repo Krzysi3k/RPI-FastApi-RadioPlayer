@@ -6,7 +6,6 @@ import subprocess
 import re
 
 
-
 @dataclass
 class StationDetails:
     display_name: str
