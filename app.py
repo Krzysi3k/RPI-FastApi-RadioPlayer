@@ -1,6 +1,4 @@
 from fastapi import FastAPI, Response, status
-from starlette.routing import Host
-import uvicorn
 from config import stations, media_log, q, r
 from dataclasses import dataclass
 import tasks
