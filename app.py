@@ -1,4 +1,6 @@
 from fastapi import FastAPI, Response, status
+from starlette.routing import Host
+import uvicorn
 from config import stations, media_log, q, r
 from dataclasses import dataclass
 import tasks
@@ -7,24 +9,20 @@ import re
 
 
 @dataclass
-class StationDetails:
-    display_name: str
+class Station:
+    uri_name: str
+    name: str
     cmd: str
 
 
-@dataclass
-class Station:
-    station_name: str
-    details: StationDetails
-
-
 class RadioStation:
-    def __init__(self, station_name):
+    def __init__(self, uri_name):
         try:
-            self.station = Station(station_name, StationDetails(
-                stations[station_name]["name"],
-                stations[station_name]["cmd"]
-            ))
+            self.station = Station(
+                uri_name=uri_name,
+                name=stations[uri_name]["name"],
+                cmd=stations[uri_name]["cmd"],
+            )
         except KeyError:
             self.station = None
 
@@ -36,12 +34,10 @@ app = FastAPI()
 def play_station(station: str, response: Response):
     radio = RadioStation(station)
     if radio.station is not None:
-        cmd = radio.station.details.cmd
-        app_name = cmd.split(' ')[0]
-        station_name = radio.station.details.display_name
-        q.enqueue(tasks.play_station, cmd, app_name, media_log)
-        r.set('station', station_name)
-        return {'playing': station_name}
+        app_name = radio.station.cmd.split(' ')[0]
+        q.enqueue(tasks.play_station, radio.station.cmd, app_name, media_log)
+        r.set('station', radio.station.name)
+        return {'playing': radio.station.name}
     response.status_code = status.HTTP_404_NOT_FOUND
     return {'playing': False, 'station':'not found'}
 
@@ -69,7 +65,7 @@ def get_title():
     title = p.stdout.read().decode('utf-8').strip()
     title = title.replace("';","'")
     station = r.get('station').decode('utf-8')
-    print(title)
+    # print(title)
     if re.match('.*[a-zA-Z]+', title):
         return {'title': title, 'station': station}
     return {'title': 'unknown', 'station': station}
