@@ -1,5 +1,4 @@
 from fastapi import FastAPI, Response, status
-import uvicorn
 from config import stations, media_log, q, r
 from dataclasses import dataclass, field
 import tasks
