@@ -30,7 +30,6 @@ app = FastAPI()
 @app.get('/play/{station}')
 def play_station(station: str, response: Response):
     radio = Station(station)
-    print(123)
     if radio.name is not None:
         q.enqueue(tasks.play_station, radio.cmd, radio.app_name, media_log)
         r.set('station', radio.name)
@@ -57,12 +56,10 @@ def stop_radio():
 @app.get('/get-title')
 def get_title():
     cmd = f"cat {media_log} | grep -a StreamTitle | tail -n1 | cut -d ';' -f1 | cut -d '=' -f2 | cut -d ':' -f2,3,4"
-    # cmd = f"cat {media_log} | grep -a StreamTitle | tail -n1 | cut -d '=' -f2 | cut -d ':' -f2,3,4"
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
     title = p.stdout.read().decode('utf-8').strip()
     title = title.replace("';","'")
     station = r.get('station').decode('utf-8')
-    # print(title)
     if re.match('.*[a-zA-Z]+', title):
         return {'title': title, 'station': station}
     return {'title': 'unknown', 'station': station}
