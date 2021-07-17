@@ -1,28 +1,28 @@
 from fastapi import FastAPI, Response, status
+import uvicorn
 from config import stations, media_log, q, r
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import tasks
 import subprocess
 import re
 
 
-@dataclass
+@dataclass(frozen=True)
 class Station:
     uri_name: str
-    name: str
-    cmd: str
+    name: str = field(init=False)
+    cmd: str = field(init=False)
+    app_name: str = field(init=False)
 
-
-class RadioStation:
-    def __init__(self, uri_name):
+    def __post_init__(self):
         try:
-            self.station = Station(
-                uri_name=uri_name,
-                name=stations[uri_name]["name"],
-                cmd=stations[uri_name]["cmd"],
-            )
+            object.__setattr__(self, 'name', stations[self.uri_name]["name"])
+            object.__setattr__(self, 'cmd', stations[self.uri_name]["cmd"])
+            object.__setattr__(self, 'app_name', self.cmd.split(' ')[0])
         except KeyError:
-            self.station = None
+            object.__setattr__(self, 'name', None)
+            object.__setattr__(self, 'cmd', None)
+            object.__setattr__(self, 'app_name', None)
 
 
 app = FastAPI()
@@ -30,12 +30,12 @@ app = FastAPI()
 
 @app.get('/play/{station}')
 def play_station(station: str, response: Response):
-    radio = RadioStation(station)
-    if radio.station is not None:
-        app_name = radio.station.cmd.split(' ')[0]
-        q.enqueue(tasks.play_station, radio.station.cmd, app_name, media_log)
-        r.set('station', radio.station.name)
-        return {'playing': radio.station.name}
+    radio = Station(station)
+    print(123)
+    if radio.name is not None:
+        q.enqueue(tasks.play_station, radio.cmd, radio.app_name, media_log)
+        r.set('station', radio.name)
+        return {'playing': radio.name}
     response.status_code = status.HTTP_404_NOT_FOUND
     return {'playing': False, 'station':'not found'}
 
