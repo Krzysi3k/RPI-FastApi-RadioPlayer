@@ -1,9 +1,11 @@
+from typing import Dict
 from fastapi import FastAPI, Response, status
-from config import stations, media_log, q, r
+from config import stations, media_log, r, q
 from dataclasses import dataclass, field
 import tasks
 import subprocess
 import re
+import docker
 
 
 @dataclass(frozen=True)
@@ -32,6 +34,7 @@ def play_station(station: str, response: Response):
     radio = Station(station)
     if radio.name is not None:
         q.enqueue(tasks.play_station, radio.cmd, radio.app_name, media_log)
+        #tsk.add_task(tasks.play_station, radio.cmd, radio.app_name, media_log)
         r.set('station', radio.name)
         return {'playing': radio.name}
     response.status_code = status.HTTP_404_NOT_FOUND
@@ -42,6 +45,7 @@ def play_station(station: str, response: Response):
 def change_volume(volume: str, response: Response):
     if volume in ['up','down','mute','unmute']:
         q.enqueue(tasks.change_volume, volume)
+        #tsk.add_task(tasks.change_volume, volume)
         return {'volume option': volume}
     response.status_code = status.HTTP_400_BAD_REQUEST
     return { 'valid query parameters': ['up','down','mute','unmute']}
@@ -50,6 +54,7 @@ def change_volume(volume: str, response: Response):
 @app.get('/stop')
 def stop_radio():
     q.enqueue(tasks.stop_radio)
+    #tsk.add_task(tasks.stop_radio)
     return {'radio':'stopped'}
 
 
@@ -69,4 +74,26 @@ def get_title():
 @app.get('/mosquitto-restart')
 def mosquitto_restart():
     q.enqueue(tasks.mosquitto_restart)
+    #tsk.add_task(tasks.mosquitto_restart)
     return {'mosquitto restarting': True}
+
+
+@app.get('/docker-info')
+def docker_info():
+    client = docker.from_env()
+    all_containers = client.containers.list(all=True)
+    containers_status = {i.name:i.status for i in all_containers}
+    return containers_status
+
+
+@app.post('/docker-action')
+def docker_action(request: Dict[str,str]):
+    client = docker.from_env()
+    cntr = client.containers.get(request['container'])
+    if request['action'] == 'start':
+        cntr.start()
+        return {'action': 'started'}
+    elif request['action'] == 'stop':
+        cntr.stop()
+        return {'action': 'stopped'}
+    
