@@ -82,8 +82,8 @@ def mosquitto_restart():
 def docker_info():
     client = docker.from_env()
     all_containers = client.containers.list(all=True)
-    containers_status = {i.name:i.status for i in all_containers}
-    return containers_status
+    containers_status = [{"name":i.name, "status":i.status} for i in all_containers]
+    return {'containers': containers_status}
 
 
 @app.post('/docker-action')

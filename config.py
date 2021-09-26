@@ -23,7 +23,7 @@ stations = {
     },
     "radio-kolor": {
         "name":"Radio Kolor",
-        "cmd": "ffplay https://s4.radio.co/s866693838/listen -nodisp"
+        "cmd": "ffplay http://stream.radiojar.com/xt0cf1v8938uv -nodisp"
     },
     "radio-eska": {
         "name":"Radio Eska",
