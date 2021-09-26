@@ -5,7 +5,9 @@ from dataclasses import dataclass, field
 import tasks
 import subprocess
 import re
+import json
 import docker
+from datetime import datetime
 
 
 @dataclass(frozen=True)
@@ -96,4 +98,17 @@ def docker_action(request: Dict[str,str]):
     elif request['action'] == 'stop':
         cntr.stop()
         return {'action': 'stopped'}
-    
+
+
+@app.get('/mqtt-handler')
+def mqtt_handler():
+    cmd = 'docker logs mqtt_handler 2>&1 | grep \'"topic":"zigbee2mqtt/Termometr"\''
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+    text = p.stdout.read().decode('utf-8').strip()
+    str_obj = str(text.split('\n'))
+    formatted_str = str_obj.replace("['","[").replace("']","]").replace('}"',"}").replace('"{',"{").replace("'","")
+    obj = json.loads(formatted_str)
+    for i in obj:
+        date_val = datetime.strptime(i['timestamp'],'%Y-%m-%d %H:%M:%S,%f')
+        i['timestamp'] = date_val.timestamp()
+    return obj
