@@ -136,7 +136,3 @@ def door_state():
     except:
         return {'door_state': 'unknown'}
     return { 'door_state': state }
-
-@app.get('/ema')
-def ema():
-    return {'message': 'ema'}
