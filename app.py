@@ -29,6 +29,7 @@ class Station:
 
 
 app = FastAPI()
+client = docker.from_env()
 
 
 @app.get('/play/{station}')
@@ -82,7 +83,6 @@ def mosquitto_restart():
 
 @app.get('/docker-info')
 def docker_info():
-    client = docker.from_env()
     all_containers = client.containers.list(all=True)
     containers_status = [{"name":i.name, "status":i.status} for i in all_containers]
     return {'containers': containers_status}
@@ -90,7 +90,6 @@ def docker_info():
 
 @app.post('/docker-action')
 def docker_action(request: Dict[str,str]):
-    client = docker.from_env()
     cntr = client.containers.get(request['container'])
     if request['action'] == 'start':
         cntr.start()
@@ -112,3 +111,32 @@ def mqtt_handler():
         date_val = datetime.strptime(i['timestamp'],'%Y-%m-%d %H:%M:%S,%f')
         i['timestamp'] = date_val.timestamp()
     return obj
+
+
+@app.get('/mqtt-handler-new')
+def mqtt_handler_new():
+    #ctr = list(filter(lambda x: x.name == 'mqtt_handler', client.containers.list(all=True)))[0]
+    ctr = [i for i in client.containers.list(all=True) if 'mqtt_handler' in i.name][0]
+    log_content = ctr.logs().decode('utf-8')
+    all_lines = log_content.split('\n')
+    filtered = [line for line in all_lines if '"topic":"zigbee2mqtt/Termometr"' in line]
+    json_output = str(filtered)
+    json_str = json_output.replace("'","").replace('\\','')
+    obj = json.loads(json_str)
+    for i in obj:
+        date_val = datetime.strptime(i['timestamp'],'%Y-%m-%d %H:%M:%S,%f')
+        i['timestamp'] = date_val.timestamp()
+    return obj
+
+
+@app.get('/door-state')
+def door_state():
+    try:
+        state = r.get('door_state').decode('utf-8')
+    except:
+        return {'door_state': 'unknown'}
+    return { 'door_state': state }
+
+@app.get('/ema')
+def ema():
+    return {'message': 'ema'}
