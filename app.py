@@ -84,8 +84,24 @@ def mosquitto_restart():
 @app.get('/docker-info')
 def docker_info():
     all_containers = client.containers.list(all=True)
-    containers_status = [{"name":i.name, "status":i.status} for i in all_containers]
-    return {'containers': containers_status}
+    containers_status = { i.name:i.status for i in all_containers }
+    return containers_status
+
+
+@app.get('/redis-info')
+def redis_info():
+    keys = subprocess.Popen('redis-cli keys \*', shell=True, stdout=subprocess.PIPE)
+    k_output = keys.stdout.read().decode('utf-8').replace('\n',' ')
+    values = subprocess.Popen(f'redis-cli mget {k_output}', shell=True, stdout=subprocess.PIPE)
+    v_output = values.stdout.read().decode('utf-8')
+    k_arr = k_output.split(' ')
+    v_arr = v_output.split('\n')
+
+    for idx,i in enumerate(v_arr):
+        v_arr[idx] = None if len(i) == 0 else i
+
+    redis_output = {k:v for k,v in zip(k_arr, v_arr) if v is not None}
+    return redis_output
 
 
 @app.post('/docker-action')
@@ -101,7 +117,7 @@ def docker_action(request: Dict[str,str]):
 
 @app.get('/mqtt-handler')
 def mqtt_handler():
-    cmd = 'docker logs mqtt_handler 2>&1 | grep \'"topic":"zigbee2mqtt/Termometr"\''
+    cmd = 'docker logs mqtt_handler -n20000 2>&1 | grep \'"topic":"zigbee2mqtt/Termometr"\''
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
     text = p.stdout.read().decode('utf-8').strip()
     str_obj = str(text.split('\n'))
