@@ -84,24 +84,14 @@ def mosquitto_restart():
 @app.get('/docker-info')
 def docker_info():
     all_containers = client.containers.list(all=True)
-    containers_status = { i.name:i.status for i in all_containers }
-    return containers_status
+    return { i.name:i.status for i in all_containers }
 
 
 @app.get('/redis-info')
 def redis_info():
-    keys = subprocess.Popen('redis-cli keys \*', shell=True, stdout=subprocess.PIPE)
-    k_output = keys.stdout.read().decode('utf-8').replace('\n',' ')
-    values = subprocess.Popen(f'redis-cli mget {k_output}', shell=True, stdout=subprocess.PIPE)
-    v_output = values.stdout.read().decode('utf-8')
-    k_arr = k_output.split(' ')
-    v_arr = v_output.split('\n')
-
-    for idx,i in enumerate(v_arr):
-        v_arr[idx] = None if len(i) == 0 else i
-
-    redis_output = {k:v for k,v in zip(k_arr, v_arr) if v is not None}
-    return redis_output
+    keys = r.keys()
+    values = r.mget(keys)
+    return { k.decode('utf-8'):v.decode('utf-8') for k,v in zip(keys,values) if v is not None }
 
 
 @app.post('/docker-action')
