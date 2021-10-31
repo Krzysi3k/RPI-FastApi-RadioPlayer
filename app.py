@@ -135,6 +135,15 @@ def mqtt_handler_new():
     return obj
 
 
+@app.get('/mqtt-handler-redis')
+def mqtt_handler_redis():
+    try:
+        payload = r.get('termometr_payload').decode('utf-8')
+    except:
+        return {'termometr data': 'Not found'}
+    return json.loads(payload)
+
+
 @app.get('/door-state')
 def door_state():
     try:

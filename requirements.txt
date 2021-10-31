@@ -1,3 +1,4 @@
+# current python version (3.8.5) with following setup:
 fastapi==0.67.0
 uvicorn==0.14.0
 rq==1.9.0
