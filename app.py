@@ -63,14 +63,18 @@ def stop_radio():
 
 @app.get('/get-title')
 def get_title():
-    cmd = f"cat {media_log} | grep -a StreamTitle | tail -n1 | cut -d ';' -f1 | cut -d '=' -f2 | cut -d ':' -f2,3,4"
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-    title = p.stdout.read().decode('utf-8').strip()
-    title = title.replace("';","'")
-    station = r.get('station').decode('utf-8')
-    if re.match('.*[a-zA-Z]+', title):
-        return {'title': title, 'station': station}
-    return {'title': 'unknown', 'station': station}
+    try:
+        cmd = f"cat {media_log} | grep -a StreamTitle | tail -n1 | cut -d ';' -f1 | cut -d '=' -f2 | cut -d ':' -f2,3,4"
+        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+        title = p.stdout.read().decode('utf-8').strip()
+        title = title.replace("';","'")
+        station = r.get('station').decode('utf-8')
+    except AttributeError:
+        return {'title': 'unknown', 'station': 'unknown'}
+    else:
+        if re.match('.*[a-zA-Z]+', title):
+            return {'title': title, 'station': station}
+        return {'title': 'unknown', 'station': station}
 
 
 # mosquitto handler:
