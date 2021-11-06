@@ -95,7 +95,26 @@ def docker_info():
 def redis_info():
     keys = r.keys()
     values = r.mget(keys)
-    return { k.decode('utf-8'):v.decode('utf-8') for k,v in zip(keys,values) if v is not None }
+    output = {}
+    for k, v in zip(keys, values):
+        if v is None:
+            continue
+        key = k.decode('utf-8')
+        val = v.decode('utf-8')
+        if "{" in val:
+            obj = json.loads(val)
+            if type(obj) is list:
+                obj = obj[len(obj) - 1]
+            output.update({key: obj})
+        else:
+            output.update({key: val})
+    return output
+    # return { k.decode('utf-8'):v.decode('utf-8') for k,v in zip(keys,values) if v is not None }
+
+
+@app.get('/benchmark')
+def benchmark():
+    return ''
 
 
 @app.post('/docker-action')
@@ -142,7 +161,7 @@ def mqtt_handler_new():
 @app.get('/mqtt-handler-redis')
 def mqtt_handler_redis():
     try:
-        payload = r.get('termometr_payload').decode('utf-8')
+        payload = r.get('termometr_payload')
     except:
         return {'termometr data': 'Not found'}
     return json.loads(payload)
