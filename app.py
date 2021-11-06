@@ -128,36 +128,6 @@ def docker_action(request: Dict[str,str]):
         return {'action': 'stopped'}
 
 
-@app.get('/mqtt-handler')
-def mqtt_handler():
-    cmd = 'docker logs mqtt_handler -n20000 2>&1 | grep \'"topic":"zigbee2mqtt/Termometr"\''
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-    text = p.stdout.read().decode('utf-8').strip()
-    str_obj = str(text.split('\n'))
-    formatted_str = str_obj.replace("['","[").replace("']","]").replace('}"',"}").replace('"{',"{").replace("'","")
-    obj = json.loads(formatted_str)
-    for i in obj:
-        date_val = datetime.strptime(i['timestamp'],'%Y-%m-%d %H:%M:%S,%f')
-        i['timestamp'] = date_val.timestamp()
-    return obj
-
-
-@app.get('/mqtt-handler-new')
-def mqtt_handler_new():
-    #ctr = list(filter(lambda x: x.name == 'mqtt_handler', client.containers.list(all=True)))[0]
-    ctr = [i for i in client.containers.list(all=True) if 'mqtt_handler' in i.name][0]
-    log_content = ctr.logs().decode('utf-8')
-    all_lines = log_content.split('\n')
-    filtered = [line for line in all_lines if '"topic":"zigbee2mqtt/Termometr"' in line]
-    json_output = str(filtered)
-    json_str = json_output.replace("'","").replace('\\','')
-    obj = json.loads(json_str)
-    for i in obj:
-        date_val = datetime.strptime(i['timestamp'],'%Y-%m-%d %H:%M:%S,%f')
-        i['timestamp'] = date_val.timestamp()
-    return obj
-
-
 @app.get('/mqtt-handler-redis')
 def mqtt_handler_redis():
     try:
