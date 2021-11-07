@@ -94,7 +94,7 @@ def docker_info(items: str):
         imgs = client.images.list()
         output = []
         [ output.extend(i.tags) for i in imgs ]
-        return output
+        return { 'images': output }
 
 
 @app.get('/redis-info')
