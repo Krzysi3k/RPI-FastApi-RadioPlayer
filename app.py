@@ -117,24 +117,15 @@ def benchmark():
     return ''
 
 
-@app.post('/docker-action')
-def docker_action(request: Dict[str,str]):
-    cntr = client.containers.get(request['container'])
-    if request['action'] == 'start':
-        cntr.start()
-        return {'action': 'started'}
-    elif request['action'] == 'stop':
-        cntr.stop()
-        return {'action': 'stopped'}
-
-
-@app.get('/mqtt-handler-redis')
-def mqtt_handler_redis():
+@app.get('/get-redis-data')
+def get_redis_data(data: str):
     try:
-        payload = r.get('termometr_payload')
+        payload = r.get(data).decode('utf-8')
     except:
-        return {'termometr data': 'Not found'}
-    return json.loads(payload)
+        return { data: 'Not found' }
+    if '{' in payload:
+        return json.loads(payload)
+    return { 'payload': payload }
 
 
 @app.get('/door-state')
