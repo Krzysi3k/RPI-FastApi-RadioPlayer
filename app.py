@@ -86,9 +86,15 @@ def mosquitto_restart():
 
 
 @app.get('/docker-info')
-def docker_info():
-    all_containers = client.containers.list(all=True)
-    return { i.name:i.status for i in all_containers }
+def docker_info(items: str):
+    if items == 'containers':
+        ctrs = client.containers.list(all=True)
+        return { i.name:i.status for i in ctrs }
+    elif items == 'images':
+        imgs = client.images.list()
+        output = []
+        [ output.extend(i.tags) for i in imgs ]
+        return output
 
 
 @app.get('/redis-info')
