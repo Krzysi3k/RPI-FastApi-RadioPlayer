@@ -130,7 +130,7 @@ def get_redis_data(data: str):
     except:
         return { data: 'Not found' }
     if '{' in payload:
-        return json.loads(payload)
+        return Response(content=payload, media_type='application/json')
     return { 'payload': payload }
 
 
