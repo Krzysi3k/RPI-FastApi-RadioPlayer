@@ -115,12 +115,6 @@ def redis_info():
         else:
             output.update({key: val})
     return output
-    # return { k.decode('utf-8'):v.decode('utf-8') for k,v in zip(keys,values) if v is not None }
-
-
-@app.get('/benchmark')
-def benchmark():
-    return ''
 
 
 @app.get('/get-redis-data')
@@ -132,12 +126,3 @@ def get_redis_data(data: str):
     if '{' in payload:
         return Response(content=payload, media_type='application/json')
     return { 'payload': payload }
-
-
-@app.get('/door-state')
-def door_state():
-    try:
-        state = r.get('door_state').decode('utf-8')
-    except:
-        return {'door_state': 'unknown'}
-    return { 'door_state': state }
