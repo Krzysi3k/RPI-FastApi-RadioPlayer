@@ -1,10 +1,17 @@
 # current python version (3.8.5) with following setup:
-fastapi==0.67.0
-uvicorn==0.14.0
-rq==1.9.0
-redis==3.5.3
-docker==5.0.0
+fastapi==0.71.0
+uvicorn==0.16.0
+rq==1.10.1
+redis==4.1.0
+docker==5.0.3
 six==1.16.0
+
+# fastapi==0.67.0
+# uvicorn==0.14.0
+# rq==1.9.0
+# redis==3.5.3
+# docker==5.0.0
+# six==1.16.0
 
 # fastapi==0.61.1
 # uvicorn==0.12.1

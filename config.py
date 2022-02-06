@@ -41,8 +41,13 @@ stations = {
         "name":"Zet Hits",
         "cmd": "ffplay https://zt.cdn.eurozet.pl/ZETHIT.mp3 -nodisp"
     },
+    "zet-alternative": {
+        "name":"Zet alternative",
+        "cmd": "ffplay https://zt.cdn.eurozet.pl/ZETALT.mp3 -nodisp"
+    },
     "wefunk-radio": {
         "name":"WeFunk radio",
         "cmd": "mpg123 http://s-10.wefunkradio.com:81/wefunk64.mp3"
     }
+
 }

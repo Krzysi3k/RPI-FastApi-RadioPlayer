@@ -8,6 +8,7 @@ import re
 import json
 import docker
 from datetime import datetime
+import uvicorn
 
 
 @dataclass(frozen=True)
@@ -110,7 +111,7 @@ def redis_info():
         if "{" in val:
             obj = json.loads(val)
             if type(obj) is list:
-                obj = obj[len(obj) - 1]
+                obj = obj[-1]
             output.update({key: obj})
         else:
             output.update({key: val})
@@ -126,3 +127,8 @@ def get_redis_data(data: str):
     if '{' in payload:
         return Response(content=payload, media_type='application/json')
     return { 'payload': payload }
+
+
+
+# if __name__ == '__main__':
+#     uvicorn.run(app=app, host='0.0.0.0', port=5000, log_level='info')
